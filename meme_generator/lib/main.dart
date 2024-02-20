@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:meme_generator/screen/meme_generator_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meme_generator/screens/meme_generator_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 /// App,s main widget.
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MemeGeneratorScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
