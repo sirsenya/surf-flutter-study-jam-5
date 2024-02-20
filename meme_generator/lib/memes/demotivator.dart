@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meme_generator/riverpod/current_values/current_values.dart';
+import 'package:screenshot/screenshot.dart';
 
 class Demotivator extends ConsumerStatefulWidget {
   final String name = "Basic template";
@@ -56,22 +57,32 @@ class _DemotivatorState extends ConsumerState<Demotivator> {
     }
   }
 
+  Uint8List? _imageFile;
+
   final globalKey = GlobalKey();
 
-  Future<void> takePicture() async {
-    RenderRepaintBoundary boundary =
-        globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    ui.Image image = await boundary.toImage();
-    final directory = (await getApplicationDocumentsDirectory()).path;
-    ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-    Directory appDocDirectory = await getApplicationDocumentsDirectory();
-
-    File imgFile = new File('photo.png');
-
-    imgFile.writeAsBytes(pngBytes);
+  Future<void> saveImage(Uint8List imageBytes) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = '${DateTime.now().microsecondsSinceEpoch}.png';
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsBytes(imageBytes);
+      print("image saved to: ${file.path}");
+    } catch (error) {
+      print(error);
+    }
   }
+
+  void captureWidget() {
+    screenshotController.capture().then((value) {
+      setState(() {
+        _imageFile = value;
+        saveImage(_imageFile!);
+      });
+    });
+  }
+
+  ScreenshotController screenshotController = ScreenshotController();
 
   @override
   Widget build(BuildContext context) {
@@ -94,65 +105,69 @@ class _DemotivatorState extends ConsumerState<Demotivator> {
                   horizontal: 50,
                   vertical: 20,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    InkWell(
-                      onTap: () {
-                        print('tapped');
-                        _pickImagefromGallery();
-                      },
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: MediaQuery.of(context).size.height * 1 / 3,
-                        child: DecoratedBox(
-                          decoration: decoration,
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: FittedBox(
-                              child: imageFromGallery && imageFile != null
-                                  ? Image.file(imageFile!)
-                                  : Image.network(
-                                      ref.watch(currentValuesProvider).when(
-                                          data: (texts) => texts[0],
-                                          error: (e, t) =>
-                                              "https://storage.googleapis.com/pod_public/1300/175426.jpg",
-                                          loading: () =>
-                                              "https://storage.googleapis.com/pod_public/1300/175426.jpg"),
-                                      errorBuilder: (context, e, t) =>
-                                          Text("Wrong URI"),
-                                      fit: BoxFit.cover,
-                                    ),
+                child: Screenshot(
+                  controller: screenshotController,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      InkWell(
+                        onTap: () {
+                          print('tapped');
+                          _pickImagefromGallery();
+                        },
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: MediaQuery.of(context).size.height * 1 / 3,
+                          child: DecoratedBox(
+                            decoration: decoration,
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: FittedBox(
+                                child: imageFromGallery && imageFile != null
+                                    ? Image.file(imageFile!)
+                                    : Image.network(
+                                        ref.watch(currentValuesProvider).when(
+                                            data: (texts) => texts[0],
+                                            error: (e, t) =>
+                                                "https://storage.googleapis.com/pod_public/1300/175426.jpg",
+                                            loading: () =>
+                                                "https://storage.googleapis.com/pod_public/1300/175426.jpg"),
+                                        errorBuilder: (context, e, t) =>
+                                            Text("Wrong URI"),
+                                        fit: BoxFit.cover,
+                                      ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      height: (MediaQuery.of(context).size.height / 10),
-                      width: (MediaQuery.of(context).size.height * 2 / 3) * 1.5,
-                      child: FittedBox(
-                        child: Text(
-                          ref.watch(currentValuesProvider).when(
-                              data: (texts) => texts[1],
-                              error: (e, t) => throw Exception(e),
-                              loading: () => "Loading"),
-                          style: TextStyle(
-                            fontFamily: 'Impact',
-                            fontSize: 40,
-                            color: Colors.white,
+                      SizedBox(
+                        height: (MediaQuery.of(context).size.height / 10),
+                        width:
+                            (MediaQuery.of(context).size.height * 2 / 3) * 1.5,
+                        child: FittedBox(
+                          child: Text(
+                            ref.watch(currentValuesProvider).when(
+                                data: (texts) => texts[1],
+                                error: (e, t) => throw Exception(e),
+                                loading: () => "Loading"),
+                            style: TextStyle(
+                              fontFamily: 'Impact',
+                              fontSize: 40,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-        ElevatedButton(onPressed: takePicture, child: Text('')),
+        ElevatedButton(onPressed: captureWidget, child: Text('Save image')),
         Switch(
           value: imageFromGallery,
           onChanged: (_) => setState(
