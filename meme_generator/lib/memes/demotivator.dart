@@ -163,6 +163,7 @@ class _DemotivatorState extends ConsumerState<Demotivator> {
         ),
         TextField(
           controller: imageTextController,
+          style: TextStyle(color: Colors.white),
           onChanged: (_) => ref
               .read(currentValuesProvider.notifier)
               .addValue(value: _, index: 0),

@@ -87,6 +87,7 @@ class _IcebergState extends ConsumerState<Iceberg> {
               itemCount: quantityOfFields,
               itemBuilder: (context, index) => TextField(
                     controller: textEditingControllers[index],
+                    style: TextStyle(color: Colors.white),
                     onChanged: (_) => ref
                         .read(currentValuesProvider.notifier)
                         .addValue(value: _, index: index),

@@ -79,13 +79,15 @@ class _IcebergState extends ConsumerState<IntelligenceLevel> {
         SizedBox(
           height: screenHeight * 1 / 3,
           child: ListView.builder(
-              itemCount: quantityOfFields,
-              itemBuilder: (context, index) => TextField(
-                    controller: textEditingControllers[index],
-                    onChanged: (_) => ref
-                        .read(currentValuesProvider.notifier)
-                        .addValue(value: _, index: index),
-                  )),
+            itemCount: quantityOfFields,
+            itemBuilder: (context, index) => TextField(
+              controller: textEditingControllers[index],
+              style: TextStyle(color: Colors.white),
+              onChanged: (_) => ref
+                  .read(currentValuesProvider.notifier)
+                  .addValue(value: _, index: index),
+            ),
+          ),
         )
       ],
     );
